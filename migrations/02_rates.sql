@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS rates CASCADE;
+
+CREATE TABLE rates (
+  id SERIAL PRIMARY KEY NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  cost_per_night INTEGER NOT NULL,
+  property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE
+);
