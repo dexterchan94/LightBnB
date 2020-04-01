@@ -116,7 +116,7 @@ const getAllProperties = function(options, limit = 10) {
   let queryString = `
   SELECT properties.*, AVG(property_reviews.rating) AS average_rating
   FROM properties
-  JOIN property_reviews ON property_reviews.property_id = properties.id 
+  LEFT JOIN property_reviews ON property_reviews.property_id = properties.id 
   `;
 
   if (options.city) {
@@ -172,7 +172,9 @@ const getAllProperties = function(options, limit = 10) {
   `;
 
   return pool.query(queryString, queryParams)
-  .then(res => res.rows);
+  .then((res) => {
+    return res.rows;
+  });
 
 };
 exports.getAllProperties = getAllProperties;
@@ -184,9 +186,33 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  property.cost_per_night *= 100;
+  const keys = Object.keys(property);
+  const values = Object.values(property);
+  const queryParams = [];
+  let queryString1 = `
+  INSERT INTO properties (
+  `;
+
+  let queryString2 = `
+  ) VALUES (
+  `;
+
+  for (let i = 0; i < keys.length; i++) {
+    queryParams.push(values[i]);
+    queryString1 += `${keys[i]}`;
+    queryString2 += `$${queryParams.length}`;
+    if (i !== keys.length - 1) {
+      queryString1 += `, `;
+      queryString2 += `, `;
+    }
+  }
+
+  let queryString = `${queryString1}${queryString2}) RETURNING *;`;
+
+  return pool.query(queryString, queryParams)
+  .then((res) => {
+    return res.rows;
+  });
 }
 exports.addProperty = addProperty;
